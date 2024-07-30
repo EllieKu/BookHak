@@ -14,13 +14,15 @@ try:
     driver.get("https://readmoo.com/")
 
     search_box = driver.find_element(By.NAME, "search_term_string")
+    book_title = "底層邏輯"
 
-
-    # 点击按钮
-    search_box.send_keys("底層邏輯")
-    time.sleep(5)
+    search_box.send_keys(book_title)
+    time.sleep(3)
     search_button = driver.find_element(By.CSS_SELECTOR, "button[aria-label='搜尋']")
     search_button.click()
+    time.sleep(3)
+    link_element = driver.find_element(By.CSS_SELECTOR, f"a[aria-label={book_title}]")
+    link_element.click()
 
 finally:
     driver.quit()
