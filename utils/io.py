@@ -12,7 +12,7 @@ def writer_csv(filename: str, content: list[str]):
 
 
 def store_reviews(data):
-    filename = "reviews.csv"
+    filename = "./output/reviews.csv"
     writer_csv(filename, data)
 
     print(f"Reviews has been written to {filename}")
