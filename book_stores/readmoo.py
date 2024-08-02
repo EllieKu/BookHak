@@ -2,8 +2,8 @@ import time
 import requests
 from selenium import webdriver
 from selenium.webdriver.common.by import By
-from typing import List, Dict
-from utils.io import store_reviews, Review
+from typing import Dict, List, Tuple
+from utils.io import Review
 
 
 options = webdriver.ChromeOptions()
@@ -13,11 +13,8 @@ options.add_argument("--disable-popup-blocking")  # 禁用弹出窗口拦截
 driver = webdriver.Chrome(options=options)
 driver.implicitly_wait(10)
 
-# book_title = "真確：扭轉十大直覺偏誤，發現事情比你想的美好"
-book_title = "高成長思維"
 
-
-def test():
+def test(book_title: str) -> List[Tuple]:
     try:
         driver.get("https://readmoo.com/")
 
@@ -42,15 +39,13 @@ def test():
             response = resp.json()
             result_list = get_all_reviews(result_list, response["reviews"])
 
-        store_reviews(result_list)
-        time.sleep(10)
-
+        return result_list
     finally:
+        time.sleep(10)
         driver.quit()
 
 
 def get_all_reviews(all_reviews: List, resp_reviews: List[Dict]):
-
     for review in resp_reviews:
         row = Review(
             title=review["title"],
