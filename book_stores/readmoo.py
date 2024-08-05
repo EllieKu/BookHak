@@ -23,7 +23,8 @@ def test(book_title: str) -> List[Tuple]:
         time.sleep(3)
         search_button = driver.find_element(By.CSS_SELECTOR, "button[aria-label='搜尋']")
         search_button.click()
-        link_element = driver.find_element(By.CSS_SELECTOR, f"a[aria-label={book_title}]")
+        # link_element = driver.find_element(By.CSS_SELECTOR, f"a[aria-label={book_title}]")
+        link_element = driver.find_element(By.CLASS_NAME, "product-link")
         book_id = link_element.get_attribute('data-readmoo-id')
 
         COUNT = 10

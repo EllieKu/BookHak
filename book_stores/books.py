@@ -1,10 +1,11 @@
 import time
 import requests
 import re
+from bs4 import BeautifulSoup
 from selenium import webdriver
 from selenium.webdriver.common.by import By
-from typing import Dict, List, Tuple
-from utils.io import store_reviews, Review
+from typing import List, Tuple
+from utils.io import Review
 
 
 options = webdriver.ChromeOptions()
@@ -17,7 +18,6 @@ driver.implicitly_wait(10)
 
 def test(book_title: str) -> List[Tuple]:
     try:
-        # driver.get("https://www.books.com.tw/")
         driver.get("https://www.books.com.tw/?loc=tw_logo_001")
 
         ad_close = driver.find_element(By.ID, "close_top_banner")
@@ -37,32 +37,63 @@ def test(book_title: str) -> List[Tuple]:
         match = re.search(r'/item/(\d+)/', link_href)
         if match:
             book_id = match.group(1)
-            print(f"ID: {book_id}")
+            print(f"book_id: {book_id}")
         else:
             print("未找到 ID")
 
-        reqUrl = "https://www.books.com.tw/booksComment/ajaxCommemtFilter"
-        headersList = {
-          "Accept": "*/*",
-          "User-Agent": "Thunder Client (https://www.thunderclient.com)",
-          "Content-Type": "multipart/form-data; boundary=kljmyvW1ndjXaOEAg4vPm6RBUqO6MC5A"
-        }
-        payload = f"--kljmyvW1ndjXaOEAg4vPm6RBUqO6MC5A\r\nContent-Disposition: form-data; name=\"type\"\r\n\r\ngetCommemt\r\n--kljmyvW1ndjXaOEAg4vPm6RBUqO6MC5A\r\nContent-Disposition: form-data; name=\"stars[]\"\r\n\r\nall\r\n--kljmyvW1ndjXaOEAg4vPm6RBUqO6MC5A\r\nContent-Disposition: form-data; name=\"daterange\"\r\n\r\nall\r\n--kljmyvW1ndjXaOEAg4vPm6RBUqO6MC5A\r\nContent-Disposition: form-data; name=\"num\"\r\n\r\n1\r\n--kljmyvW1ndjXaOEAg4vPm6RBUqO6MC5A\r\nContent-Disposition: form-data; name=\"item\"\r\n\r\n0010919211\r\n--kljmyvW1ndjXaOEAg4vPm6RBUqO6MC5A--\r\n"
-        response = requests.request("POST", reqUrl, data=payload,  headers=headersList)
-        print(response.text)
+        the_book = Books(book_id)
+        total_page = the_book.get_total_page()
+        if total_page == 0:
+            return []
+
+        result_list = []
+        for i in range(total_page):
+            rows = the_book.get_reviews_by_page(i)
+            result_list += rows
+
+        return result_list
     finally:
         driver.quit()
 
 
-def get_all_reviews(all_reviews: List, resp_reviews: List[Dict]):
-    for review in resp_reviews:
-        row = Review(
-            title=review["title"],
-            content=review["content"],
-            rating=review["reading"]["rating"],
-            source="readmoo"
-        ).to_row()
+class Books:
+    def __init__(self, id: str):
+        self.id = id
 
-        all_reviews.append(row)
+    def get_reviews_by_page(self, page: int):
+        _page = page + 1
+        soup = self._req(_page)
+        items = soup.find_all('div', class_='box-item type-02')
+        result_list = []
+        for item in items:
+            title = item.find('div', class_='title').find('a').get_text() if item.find('div', class_='title').find('a') else ""
+            content = item.find('span', calss='comment-content').get_text()
+            rating = item.find('span', class_="bui-star")["title"].removesuffix("顆星")
+            row = Review(title=title, content=content, rating=rating, source="books").to_row()
+            result_list.append(row)
 
-    return all_reviews
+        return result_list
+
+    def get_total_page(self) -> int:
+        soup = self._req(1)
+        total_page = soup.find('em').get_text()
+
+        return int(total_page)
+
+    def _req(self, page: int):
+        reqUrl = "https://www.books.com.tw/booksComment/ajaxCommemtFilter"
+        headersList = {
+            "Content-Type": "application/x-www-form-urlencoded; charset=UTF-8"
+        }
+        payload = {
+            "type": "getCombmemt",
+            "stars[]": "all",
+            "daterange": "all",
+            "num": page,
+            "item": self.id
+        }
+        resp = requests.request("POST", reqUrl, data=payload,  headers=headersList)
+        response = resp.json()
+        soup = BeautifulSoup(response["htmlData"], 'html.parser')
+
+        return soup
