@@ -6,9 +6,13 @@ book_title = "底層邏輯：看清這個世界的底牌"
 
 
 def get_reviews_pipeline(book_title: str):
-    # rows = readmoo(book_title)
+    content = []
+    rows = readmoo(book_title)
+    content += rows
     rows = books(book_title)
-    # store_reviews(rows)
+    content += rows
+
+    store_reviews(book_title, content)
 
 
 get_reviews_pipeline(book_title=book_title)

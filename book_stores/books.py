@@ -37,7 +37,6 @@ def test(book_title: str) -> List[Tuple]:
         match = re.search(r'/item/(\d+)/', link_href)
         if match:
             book_id = match.group(1)
-            print(f"book_id: {book_id}")
         else:
             print("未找到 ID")
 
@@ -86,7 +85,7 @@ class Books:
             "Content-Type": "application/x-www-form-urlencoded; charset=UTF-8"
         }
         payload = {
-            "type": "getCombmemt",
+            "type": "getCommemt",
             "stars[]": "all",
             "daterange": "all",
             "num": page,
