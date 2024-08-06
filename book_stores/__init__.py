@@ -1,8 +1,8 @@
 from .readmoo import test as readmoo
-from .books import test as books
+from .books import Books
 
 
 __all__ = [
   "readmoo",
-  "books"
+  "Books"
 ]

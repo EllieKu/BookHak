@@ -4,7 +4,7 @@ import re
 from bs4 import BeautifulSoup
 from selenium import webdriver
 from selenium.webdriver.common.by import By
-from typing import List, Tuple
+from typing import List, Tuple, Optional
 from utils.io import Review
 
 
@@ -16,8 +16,27 @@ driver = webdriver.Chrome(options=options)
 driver.implicitly_wait(10)
 
 
-def test(book_title: str) -> List[Tuple]:
-    try:
+class Books:
+    def __init__(self, book_title: str):
+        self.book_title = book_title
+
+    def get_reviews_pipeline(self) -> Optional[List[Tuple]]:
+        try:
+            self.book_id = self._get_book_id()
+            total_page = self._get_total_page()
+            if total_page == 0:
+                return []
+
+            result_list = []
+            for i in range(total_page):
+                rows = self._get_reviews_by_page(i)
+                result_list += rows
+
+            return result_list
+        finally:
+            driver.quit()
+
+    def _get_book_id(self) -> str:
         driver.get("https://www.books.com.tw/?loc=tw_logo_001")
 
         ad_close = driver.find_element(By.ID, "close_top_banner")
@@ -29,37 +48,20 @@ def test(book_title: str) -> List[Tuple]:
         type_item = driver.find_element(By.CSS_SELECTOR, "a[cat=BKA]")
         type_item.click()
         search_box = driver.find_element(By.CLASS_NAME, "search_key")
-        search_box.send_keys(book_title)
+        search_box.send_keys(self.book_title)
         search_button = driver.find_element(By.CLASS_NAME, "search_btn")
         search_button.click()
-        link_element = driver.find_element(By.CSS_SELECTOR, f"a[title={book_title}]")
+        link_element = driver.find_element(By.CSS_SELECTOR, f"a[title={self.book_title}]")
         link_href = link_element.get_attribute("href")
         match = re.search(r'/item/(\d+)/', link_href)
         if match:
             book_id = match.group(1)
+            return book_id
         else:
             print("未找到 ID")
+            return None
 
-        the_book = Books(book_id)
-        total_page = the_book.get_total_page()
-        if total_page == 0:
-            return []
-
-        result_list = []
-        for i in range(total_page):
-            rows = the_book.get_reviews_by_page(i)
-            result_list += rows
-
-        return result_list
-    finally:
-        driver.quit()
-
-
-class Books:
-    def __init__(self, id: str):
-        self.id = id
-
-    def get_reviews_by_page(self, page: int):
+    def _get_reviews_by_page(self, page: int):
         _page = page + 1
         soup = self._req(_page)
         items = soup.find_all('div', class_='box-item type-02')
@@ -73,7 +75,7 @@ class Books:
 
         return result_list
 
-    def get_total_page(self) -> int:
+    def _get_total_page(self) -> int:
         soup = self._req(1)
         total_page = soup.find('em').get_text()
 
@@ -89,7 +91,7 @@ class Books:
             "stars[]": "all",
             "daterange": "all",
             "num": page,
-            "item": self.id
+            "item": self.book_id
         }
         resp = requests.request("POST", reqUrl, data=payload,  headers=headersList)
         response = resp.json()
