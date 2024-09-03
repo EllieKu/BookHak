@@ -3,7 +3,7 @@ import requests
 from selenium import webdriver
 from selenium.webdriver.common.by import By
 from typing import List, Tuple, Optional
-from utils.io import Review
+from BookHak.utils.io import Review
 
 
 options = webdriver.ChromeOptions()

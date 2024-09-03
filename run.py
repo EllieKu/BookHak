@@ -1,5 +1,5 @@
-from book_stores import Books, Readmoo
-from utils.io import store_reviews
+from BookHak.crawler import Books, Readmoo
+from BookHak.utils.io import store_reviews
 
 book_title = "底層邏輯：看清這個世界的底牌"
 
