@@ -70,7 +70,7 @@ class Books:
             title = item.find('div', class_='title').find('a').get_text() if item.find('div', class_='title').find('a') else ""
             content = item.find('span', calss='comment-content').get_text()
             rating = item.find('span', class_="bui-star")["title"].removesuffix("顆星")
-            row = Review(title=title, content=content, rating=rating, source="books").to_row()
+            row = Review(title=title, content=content, rating=rating, source="books").__dict__
             result_list.append(row)
 
         return result_list

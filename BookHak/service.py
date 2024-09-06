@@ -1,12 +1,15 @@
 from BookHak.crawler import Books, Readmoo
-from BookHak.utils.io import store_reviews
+from BookHak.crud import find_book_by_title, create_book
 
 
-def get_reviews_pipeline(book_title: str):
-    content = []
-    rows = Readmoo(book_title).get_reviews_pipeline()
-    content += rows
-    rows = Books(book_title).get_reviews_pipeline()
-    content += rows
+def get_reviews_by_title(book_title: str):
+    book = find_book_by_title(book_title)
+    if book:
+        return book["reviews"]
 
-    store_reviews(book_title, content)
+    reviews = Readmoo(book_title).get_reviews_pipeline()
+    reviews += Books(book_title).get_reviews_pipeline()
+
+    create_book(book_title, reviews)
+
+    return reviews

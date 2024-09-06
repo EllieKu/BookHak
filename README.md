@@ -13,5 +13,11 @@ pip install -r requirements.txt
 Run
 
 ```bash
-python run.py
+uvicorn main:app --reload
 ```
+
+running: [swagger docs](http://127.0.0.1:8000/docs)
+
+## Structure
+
+- Firebase: [Cloud Firestore](https://firebase.google.com/pricing)

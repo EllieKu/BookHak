@@ -33,7 +33,7 @@ class Readmoo:
                     content=review["content"],
                     rating=review["reading"]["rating"],
                     source="readmoo"
-                ).to_row()
+                ).__dict__
                 result_list.append(row)
 
             return result_list
