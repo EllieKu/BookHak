@@ -1,22 +1,15 @@
 import time
 import requests
-from selenium import webdriver
 from selenium.webdriver.common.by import By
 from typing import List, Tuple, Optional
 from BookHak.utils.io import Review
-
-
-options = webdriver.ChromeOptions()
-options.add_experimental_option('detach', True)  # 不自动关闭浏览器
-options.add_argument("--disable-notifications")  # 禁用通知
-options.add_argument("--disable-popup-blocking")  # 禁用弹出窗口拦截
-driver = webdriver.Chrome(options=options)
-driver.implicitly_wait(10)
+from BookHak.utils.driver import ChromeDriverManager
 
 
 class Readmoo:
     def __init__(self, book_title: str):
         self.book_title = book_title
+        self.driver = ChromeDriverManager().get_driver()
 
     def get_reviews_pipeline(self) -> Optional[List[Tuple]]:
         try:
@@ -38,17 +31,17 @@ class Readmoo:
 
             return result_list
         finally:
-            driver.quit()
+            self.driver.quit()
 
     def _get_book_id(self) -> str:
-        driver.get("https://readmoo.com/")
+        self.driver.get("https://readmoo.com/")
 
-        search_box = driver.find_element(By.NAME, "search_term_string")
+        search_box = self.driver.find_element(By.NAME, "search_term_string")
         search_box.send_keys(self.book_title)
         time.sleep(3)
-        search_button = driver.find_element(By.CSS_SELECTOR, "button[aria-label='搜尋']")
+        search_button = self.driver.find_element(By.CSS_SELECTOR, "button[aria-label='搜尋']")
         search_button.click()
-        link_element = driver.find_element(By.CLASS_NAME, "product-link")
+        link_element = self.driver.find_element(By.CLASS_NAME, "product-link")
         book_id = link_element.get_attribute('data-readmoo-id')
 
         if book_id:
