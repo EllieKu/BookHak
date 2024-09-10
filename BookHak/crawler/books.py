@@ -5,6 +5,7 @@ from bs4 import BeautifulSoup
 from selenium.webdriver.common.by import By
 from typing import List, Tuple, Optional
 from BookHak.utils.io import Review
+from BookHak.utils.utils import fullwidth_to_halfwidth
 from BookHak.utils.driver import ChromeDriverManager
 
 
@@ -44,7 +45,8 @@ class Books:
         search_box.send_keys(self.book_title)
         search_button = self.driver.find_element(By.CLASS_NAME, "search_btn")
         search_button.click()
-        link_element = self.driver.find_element(By.CSS_SELECTOR, f"a[title={self.book_title}]")
+        title_trans = fullwidth_to_halfwidth(self.book_title)
+        link_element = self.driver.find_element(By.CSS_SELECTOR, f'a[title="{title_trans}"]')
         link_href = link_element.get_attribute("href")
         match = re.search(r'/item/(\d+)/', link_href)
         if match:
