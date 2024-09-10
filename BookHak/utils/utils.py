@@ -20,3 +20,10 @@ def fullwidth_to_halfwidth(text):
     translation_table = str.maketrans("！＠＃＄％＾＆＊（）＿：？", "!@#$%^&*()_:?")
 
     return text.translate(translation_table)
+
+
+def halfwidth_to_fullwidth(text):
+    """半形轉全形"""
+    translation_table = str.maketrans("!@#$%^&*()_:?", "！＠＃＄％＾＆＊（）＿：？")
+
+    return text.translate(translation_table)

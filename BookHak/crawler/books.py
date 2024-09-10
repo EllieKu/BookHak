@@ -3,10 +3,12 @@ import requests
 import re
 from bs4 import BeautifulSoup
 from selenium.webdriver.common.by import By
+from selenium.common.exceptions import NoSuchElementException
 from typing import List, Tuple, Optional
 from BookHak.utils.io import Review
-from BookHak.utils.utils import fullwidth_to_halfwidth
+from BookHak.utils.utils import fullwidth_to_halfwidth, halfwidth_to_fullwidth
 from BookHak.utils.driver import ChromeDriverManager
+from BookHak.utils.log import logger
 
 
 class Books:
@@ -27,6 +29,8 @@ class Books:
                 result_list += rows
 
             return result_list
+        except Exception as e:
+            logger.error(f"An error occurred when crawling Books: {e} ")
         finally:
             self.driver.quit()
 
@@ -45,15 +49,15 @@ class Books:
         search_box.send_keys(self.book_title)
         search_button = self.driver.find_element(By.CLASS_NAME, "search_btn")
         search_button.click()
-        title_trans = fullwidth_to_halfwidth(self.book_title)
-        link_element = self.driver.find_element(By.CSS_SELECTOR, f'a[title="{title_trans}"]')
+        link_element = self._get_link_element()
         link_href = link_element.get_attribute("href")
         match = re.search(r'/item/(\d+)/', link_href)
         if match:
             book_id = match.group(1)
+            logger.info(f"book_id: {book_id}")
             return book_id
         else:
-            print("未找到 ID")
+            logger.info("未找到 book_id")
             return None
 
     def _get_reviews_by_page(self, page: int):
@@ -72,9 +76,28 @@ class Books:
 
     def _get_total_page(self) -> int:
         soup = self._req(1)
-        total_page = soup.find('em').get_text()
+        em_element = soup.find('em')
+        if em_element is None:
+            return 0
 
+        total_page = em_element.get_text()
         return int(total_page)
+
+    def _get_link_element(self):
+        # 全形或半形都有可能出現
+        try:
+            title_trans = fullwidth_to_halfwidth(self.book_title)
+            link_element = self.driver.find_element(By.CSS_SELECTOR, f"a[title='{title_trans}']")
+
+            return link_element
+        except NoSuchElementException:
+            try:
+                title_trans = halfwidth_to_fullwidth(self.book_title)
+                link_element = self.driver.find_element(By.CSS_SELECTOR, f"a[title='{title_trans}']")
+
+                return link_element
+            except NoSuchElementException:
+                return None
 
     def _req(self, page: int):
         reqUrl = "https://www.books.com.tw/booksComment/ajaxCommemtFilter"
